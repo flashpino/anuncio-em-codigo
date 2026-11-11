@@ -105,6 +105,8 @@ quadro só (para conferir uma cena sem renderizar tudo).
 
 ## Licenças e créditos
 
+- O código deste repositório está sob a [licença MIT](LICENSE): pode usar, alterar e
+  redistribuir, inclusive comercialmente.
 - O Remotion tem [licença própria](https://www.remotion.dev/license): gratuito
   para pessoas e empresas pequenas, pago para empresas maiores. Confira antes de
   usar comercialmente.
