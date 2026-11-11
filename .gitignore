@@ -1,0 +1,7 @@
+node_modules/
+out/
+.env
+.perfil-captura/
+# prints de sistemas reais podem conter dados de clientes: não versionar por padrão
+public/screens/*
+!public/screens/.gitkeep
