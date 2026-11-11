@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "remotion studio",
     "quadro": "remotion still Anuncio out/quadro.png --scale=0.5",
-    "render": "remotion render Anuncio out/anuncio.mp4 --codec=h264 --crf=14"
+    "render": "remotion render Anuncio out/anuncio.mp4 --codec=h264 --crf=14",
+    "render:vertical": "remotion render Vertical out/vertical.mp4 --codec=h264 --crf=14"
   },
   "dependencies": {
     "@remotion/cli": "4.0.286",

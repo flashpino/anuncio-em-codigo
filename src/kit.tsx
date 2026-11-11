@@ -7,6 +7,7 @@ import {
   Img,
   Sequence,
   interpolate,
+  interpolateColors,
   spring,
   staticFile,
   useCurrentFrame,
@@ -448,6 +449,120 @@ export const Check: React.FC<{ s?: number; c?: string }> = ({ s = 34, c = "#fff"
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </svg>
+);
+
+/* ============================== MOVIMENTO: CINÉTICA, FORMAS, 3D E CÂMERA ============================== */
+// Tipografia cinética: a palavra nasce enorme e borrada e "bate" na tela, assentando com quique.
+// `from` é a escala inicial; `rot` é o giro inicial em graus (zera ao assentar).
+export const Slam: React.FC<{
+  at: number;
+  size?: number;
+  color?: string;
+  from?: number;
+  rot?: number;
+  children: React.ReactNode;
+}> = ({ at, size = 200, color = C.ink, from = 3.2, rot = 0, children }) => {
+  const f = useF();
+  const p = sp(f, at, 12, 0.7);
+  return (
+    <div
+      style={{
+        fontFamily: SANS,
+        fontWeight: 800,
+        fontSize: size,
+        letterSpacing: -size * 0.04,
+        lineHeight: 1,
+        color,
+        whiteSpace: "nowrap",
+        opacity: interpolate(f, [at, at + 4], [0, 1], cl),
+        transform: `scale(${r2(from + (1 - from) * p)}) rotate(${r2(rot * (1 - p))}deg)`,
+        filter: p < 0.9 ? `blur(${r2((1 - p) * 10)}px)` : undefined,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Forma que vira outra: largura, altura, raio e cor passam por estágios (`at` em quadros, crescente).
+// Círculo = raio igual à metade do lado. Os filhos ficam dentro da forma (recortados por ela).
+export type Forma = { at: number; w: number; h: number; r: number; c: string };
+export const Morph: React.FC<{ stages: Forma[]; style?: React.CSSProperties; children?: React.ReactNode }> = ({
+  stages,
+  style,
+  children,
+}) => {
+  const f = useF();
+  const t = stages.map((s) => s.at);
+  const e = { ...cl, easing: Easing.inOut(Easing.cubic) };
+  const v = (k: "w" | "h" | "r") => r2(interpolate(f, t, stages.map((s) => s[k]), e));
+  return (
+    <div
+      style={{
+        width: v("w"),
+        height: v("h"),
+        borderRadius: v("r"),
+        background: interpolateColors(f, t, stages.map((s) => s.c)),
+        overflow: "hidden",
+        position: "relative",
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Palco 3D com câmera. `cam` são poses da câmera ao longo da cena: x/y deslocam (px), z aproxima
+// (px, positivo = perto), rx/ry orbitam (graus). Camadas com `z` diferente se movem em paralaxe.
+// Atenção: `opacity` e `filter` em quem tem filhos 3D achatam a cena; aplique-os só no conteúdo final.
+export type Pose = { at: number; x?: number; y?: number; z?: number; rx?: number; ry?: number };
+export const Palco3D: React.FC<{ cam: Pose[]; perspective?: number; children: React.ReactNode }> = ({
+  cam,
+  perspective = 1400,
+  children,
+}) => {
+  const f = useF();
+  const t = cam.map((c) => c.at);
+  const e = { ...cl, easing: Easing.inOut(Easing.cubic) };
+  const v = (k: "x" | "y" | "z" | "rx" | "ry") =>
+    cam.length < 2 ? (cam[0]?.[k] ?? 0) : r2(interpolate(f, t, cam.map((c) => c[k] ?? 0), e));
+  return (
+    <AbsoluteFill style={{ perspective }}>
+      <AbsoluteFill
+        style={{
+          transformStyle: "preserve-3d",
+          transform: `translate3d(${-v("x")}px, ${-v("y")}px, ${v("z")}px) rotateX(${-v("rx")}deg) rotateY(${-v("ry")}deg)`,
+        }}
+      >
+        {children}
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
+// Camada dentro do <Palco3D>: o filho fica centralizado e é deslocado/girado no espaço.
+// z negativo = longe da câmera, positivo = perto.
+export const Camada3D: React.FC<{
+  x?: number;
+  y?: number;
+  z?: number;
+  rx?: number;
+  ry?: number;
+  rz?: number;
+  children: React.ReactNode;
+}> = ({ x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, children }) => (
+  <AbsoluteFill
+    style={{
+      alignItems: "center",
+      justifyContent: "center",
+      transformStyle: "preserve-3d",
+      transform: `translate3d(${r2(x)}px, ${r2(y)}px, ${r2(z)}px) rotateX(${r2(rx)}deg) rotateY(${r2(ry)}deg) rotateZ(${r2(rz)}deg)`,
+    }}
+  >
+    {children}
+  </AbsoluteFill>
 );
 
 /* ============================== MOLDURAS ============================== */

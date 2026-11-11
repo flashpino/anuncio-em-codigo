@@ -5,7 +5,8 @@ para qualquer produto. Ele é escrito para quem vai construir o vídeo, seja um
 assistente de código (Claude Code ou outro) ou uma pessoa.
 
 O vídeo é 100% código: React + [Remotion](https://www.remotion.dev) desenham
-cada quadro. Não há edição em timeline, filmagem nem personagens 3D.
+cada quadro. Não há edição em timeline, filmagem nem personagens. O 3D que
+existe é o de planos girando no espaço com câmera (seção 6.4).
 
 **Onde está o quê**
 
@@ -69,7 +70,9 @@ Faça as perguntas de uma vez, antes de construir:
 
 - **Produto e público:** o que é, quem usa, qual é o incômodo do dia a dia que
   ele resolve. Peça uma situação real, com hora e lugar.
-- **Formato:** 16:9 (site, apresentação, YouTube) ou 9:16 (Reels, Stories, TikTok).
+- **Formato e duração:** tamanho em pixels e segundos, fixados antes de animar.
+  16:9 (1920×1080: site, apresentação, YouTube) ou 9:16 (1080×1920: Reels,
+  Stories, TikTok). Peça curta de uma ideia só: 6 s. Anúncio completo: 30 a 40 s.
 - **Final:** qual ação a pessoa deve tomar (testar, baixar, agendar, comentar).
 - **Marca:** arquivo do logo, cores e fonte. Se houver um repositório do
   produto, procure lá primeiro (`public/`, `assets/`, variáveis CSS).
@@ -247,6 +250,46 @@ const MinhaDor: React.FC<{ dur: number }> = ({ dur }) => {
 - Cartões (`card`): branco translúcido, cantos de 28, sombra longa.
 - Heróis levemente girados (2° a 5°). Telas reais ficam retas.
 
+### 6.4 Regras de movimento
+
+Além das três camadas, toda peça precisa cumprir estas cinco regras. Confira uma
+por uma antes de entregar. A composição `Vertical` em `src/Root.tsx` (6 s,
+1080×1920) cumpre todas e serve de molde.
+
+| Regra | O que significa | Peça do kit |
+|---|---|---|
+| **Duração e tamanho fixados antes** | Decida segundos e pixels antes de animar (ex.: 6 s, 1080×1920) e monte a cena para caber. Não deixe a duração "sair" da soma das animações | `Composition` em `Root.tsx` |
+| **Tipografia cinética** | O texto é ator, não legenda: bate na tela vindo grande, gira, encolhe e sai do caminho para o próximo elemento. Pelo menos uma palavra por peça faz mais do que surgir | `Slam` (batida), `Txt` (palavra por palavra) |
+| **Transição entre formas** | Um elemento vira outro em vez de sumir e o outro aparecer: ponto → círculo → celular, pílula → cartão, barra → botão | `Morph` |
+| **Elementos 3D** | Pelo menos um objeto gira em profundidade (eixos X e Y), e há camadas em distâncias diferentes | `Palco3D` + `Camada3D` |
+| **Movimento de câmera** | A câmera aproxima, desliza ou orbita durante a cena; as camadas em profundidades diferentes se deslocam em paralaxe | `cam` do `Palco3D` |
+
+Como aplicar:
+
+- **`Slam`**: `<Slam at={20} size={250}>inteiro</Slam>`. `from` é a escala
+  inicial (3.2 = vem de perto; 0 = estoura do nada) e `rot` o giro inicial.
+  Use em uma ou duas palavras por peça; se tudo bate, nada bate.
+- **Texto que abre espaço**: embrulhe as linhas num `div` e interpole
+  `translateY` e `scale` quando o próximo elemento entra (veja `sobe` no
+  exemplo). É isso que transforma texto parado em tipografia cinética.
+- **`Morph`**: recebe estágios `{ at, w, h, r, c }` (quadro, largura, altura,
+  raio, cor). Círculo é raio igual à metade do lado. O conteúdo da forma final
+  vai como filho, com `opacity` interpolada a partir do último estágio.
+- **`Palco3D`**: recebe `cam`, uma lista de poses `{ at, x, y, z, rx, ry }`.
+  `z` positivo aproxima; `x`/`y` deslizam; `rx`/`ry` orbitam. Três ou quatro
+  poses bastam para uma cena de 6 s.
+- **`Camada3D`**: posiciona um filho no espaço (`x`, `y`, `z`, `rx`, `ry`,
+  `rz`). Ponha pelo menos uma camada atrás (`z` negativo) e uma à frente (`z`
+  positivo) do objeto principal, senão o movimento de câmera não se percebe.
+- **Texto fica fora do palco.** Frases dentro do `Palco3D` giram e deformam
+  com a câmera e perdem leitura.
+- **Cuidado com `opacity` e `filter`**: aplicados num elemento que tem filhos
+  3D, achatam a cena. Use-os só no conteúdo final (a tela do celular, o
+  círculo), nunca na `Camada3D`.
+
+Limite honesto: o 3D aqui são planos girando no espaço (transformações 3D do
+navegador). Não há objetos com volume, luz nem sombra projetada.
+
 ---
 
 ## 7. Catálogo de peças
@@ -262,6 +305,10 @@ Tudo está em `src/kit.tsx`; a coluna "Onde ver" aponta a cena do exemplo.
 | `Pill` | Pílula abaixo do texto para contadores e legendas (a terceira camada) | `DorConversa`, `Custo` |
 | `Counter` | Número que rola até o total, borrado enquanto corre; aceita `format` | `Custo` |
 | `Meter` | Fio condutor no canto; `from`/`to`, `label`, `format`, `red` | `Volume`, dores |
+| `Slam` | Palavra que bate na tela: nasce grande e borrada, assenta com quique | `Vertical` |
+| `Morph` | Forma que vira outra: largura, altura, raio e cor por estágios | `Vertical` |
+| `Palco3D` | Palco com perspectiva e câmera animada por poses | `Vertical` |
+| `Camada3D` | Camada posicionada e girada no espaço, dentro do palco | `Vertical` |
 | `Phone` | Moldura de celular | `Gancho`, `Produto` |
 | `Browser` | Moldura de navegador | — |
 | `Shots` | Prints reais em sequência, cada um deslizando sobre o anterior | — (seção 8) |

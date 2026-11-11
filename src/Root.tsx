@@ -5,6 +5,7 @@ import React from "react";
 import { AbsoluteFill, Composition, Easing, interpolate } from "remotion";
 import {
   C,
+  Camada3D,
   Cena,
   Centro,
   Check,
@@ -21,11 +22,14 @@ import {
   LogoIcon,
   MARCA,
   Meter,
+  Morph,
+  Palco3D,
   Phone,
   Pill,
   Pop,
   Right,
   Scene,
+  Slam,
   Txt,
   W,
   card,
@@ -580,6 +584,144 @@ const Chamada: React.FC<{ dur: number }> = ({ dur }) => {
   );
 };
 
+/* ---------- PEÇA VERTICAL DE 6 s (1080×1920): cinética + forma que vira outra + 3D + câmera ---------- */
+// Composição separada ("Vertical"). Molde para Reels/Stories: duração e tamanho fixados antes de animar.
+const DUR_V = 180;
+const VW = 1080;
+const VH = 1920;
+const Vertical: React.FC = () => {
+  const f = useF();
+  const io = { ...cl, easing: Easing.inOut(Easing.cubic) };
+  const sobe = interpolate(f, [39, 51], [0, 1], io); // o texto abre espaço para o celular
+  const gastos = [
+    { c: C.amber, a: "Táxi", b: "R$ 48,90" },
+    { c: C.violet, a: "Almoço", b: "R$ 112,00" },
+    { c: C.brand, a: "Garagem", b: "R$ 25,00" },
+    { c: C.red, a: "Hotel", b: "R$ 640,00" },
+  ];
+  return (
+    <Scene dur={DUR_V} tint="mint">
+      {/* 3D: tudo aqui dentro é visto pela câmera, que aproxima e desliza */}
+      <Palco3D
+        cam={[
+          { at: 0, z: -140 },
+          { at: 57, z: -80 },
+          { at: 96, x: -90, y: 10, z: 110, ry: -6 },
+          { at: DUR_V, x: 110, y: 20, z: 50, ry: 5 },
+        ]}
+      >
+        <Camada3D x={260} y={360} z={-600}>
+          <div style={{ width: 900, height: 900, borderRadius: "50%", background: C.brand, opacity: 0.1 }} />
+        </Camada3D>
+        <Camada3D
+          y={110}
+          rx={interpolate(f, [57, 93, DUR_V], [14, -4, 5], io)}
+          ry={interpolate(f, [57, 93, DUR_V], [-42, 16, -12], io)}
+        >
+          {/* forma que vira outra: ponto → círculo → corpo do celular */}
+          <Morph
+            stages={[
+              { at: 39, w: 0, h: 0, r: 140, c: C.brand },
+              { at: 47, w: 270, h: 270, r: 135, c: C.brand },
+              { at: 50, w: 240, h: 240, r: 120, c: C.brand },
+              { at: 57, w: 240, h: 240, r: 120, c: C.brand },
+              { at: 72, w: 490, h: 1000, r: 72, c: "#101325" },
+            ]}
+            style={{ boxShadow: "0 50px 100px rgba(25,30,80,0.28)" }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 12,
+                borderRadius: 60,
+                background: "#fff",
+                overflow: "hidden",
+                opacity: interpolate(f, [70, 78], [0, 1], cl),
+                padding: "70px 26px 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
+              <div style={{ fontSize: 54, fontWeight: 700, color: C.ink, letterSpacing: -1.5 }}>Reembolsos</div>
+              <div style={{ fontSize: 28, color: C.muted, marginTop: -8, marginBottom: 14 }}>4 recibos lidos</div>
+              {gastos.map((g, i) => (
+                <Pop key={g.a} at={82 + i * 6}>
+                  <div
+                    style={{
+                      background: "#F6F7FB",
+                      borderRadius: 22,
+                      padding: "28px 22px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      fontSize: 30,
+                      whiteSpace: "nowrap",
+                      fontWeight: 600,
+                      color: C.ink,
+                    }}
+                  >
+                    <Dot c={g.c} s={46} />
+                    <span style={{ flex: 1 }}>{g.a}</span>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>{g.b}</span>
+                  </div>
+                </Pop>
+              ))}
+              <Pop at={112} style={{ marginTop: 14 }}>
+                <div
+                  style={{
+                    background: C.brand,
+                    color: "#fff",
+                    borderRadius: 24,
+                    padding: "30px 0",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 12,
+                    fontSize: 34,
+                    fontWeight: 700,
+                  }}
+                >
+                  <Check s={36} /> Enviado
+                </div>
+              </Pop>
+            </div>
+          </Morph>
+        </Camada3D>
+        <Camada3D x={-370} y={560} z={320}>
+          <div style={{ width: 240, height: 240, borderRadius: "50%", background: C.brand, opacity: 0.22 }} />
+        </Camada3D>
+      </Palco3D>
+
+      {/* tipografia cinética: fica fora do palco para não girar com a câmera */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 760,
+          width: VW,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+          transformOrigin: "50% 0",
+          transform: `translateY(${r2(-600 * sobe)}px) scale(${r2(1 - 0.36 * sobe)})`,
+        }}
+      >
+        <Txt w={[["o"], ["reembolso"]]} at={2} size={124} />
+        <Slam at={20} size={250}>
+          inteiro
+        </Slam>
+      </div>
+      <div style={{ position: "absolute", left: 0, top: 1690, width: VW, display: "flex", justifyContent: "center" }}>
+        <Slam at={120} size={180} color={C.brand} from={0} rot={-10}>
+          no bolso.
+        </Slam>
+      </div>
+    </Scene>
+  );
+};
+
 /* ---------- LINHA DO TEMPO: ordem e duração (em quadros, 30 por segundo) ---------- */
 const CENAS: Cena[] = [
   { C: Gancho, dur: 90 },
@@ -601,5 +743,8 @@ const Anuncio: React.FC = () => (
 );
 
 export const RemotionRoot: React.FC = () => (
-  <Composition id="Anuncio" component={Anuncio} durationInFrames={duracaoTotal(CENAS)} fps={FPS} width={W} height={H} />
+  <>
+    <Composition id="Anuncio" component={Anuncio} durationInFrames={duracaoTotal(CENAS)} fps={FPS} width={W} height={H} />
+    <Composition id="Vertical" component={Vertical} durationInFrames={DUR_V} fps={FPS} width={VW} height={VH} />
+  </>
 );
